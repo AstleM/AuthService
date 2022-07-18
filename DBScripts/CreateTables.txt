@@ -1,0 +1,60 @@
+﻿CREATE TABLE Companies
+(
+	Id varchar(50) PRIMARY KEY,
+	CreatedAt DateTime2,
+	UpdatedAt DateTime2,
+	Name varchar(100)
+)
+
+CREATE TABLE Applications
+(
+	Id varchar(50) PRIMARY KEY,
+	CreatedAt DateTime2,
+	UpdatedAt DateTime2,
+	Name Varchar(100),
+	Description Varchar(500),
+	CompanyId varchar(50) FOREIGN KEY REFERENCES Companies(Id)
+)
+
+CREATE TABLE Users
+(
+	Id varchar(50) PRIMARY KEY,
+	CreatedAt DateTime2,
+	UpdatedAt DateTime2,
+	Email varchar(255),
+	PasswordHash VARBINARY(100),
+	Salt VARBINARY(100)
+)	
+
+CREATE TABLE Customers
+(
+	Id varchar(50) PRIMARY KEY,
+	CreatedAt DateTime2,
+	UpdatedAt DateTime2,
+	Email varchar(255),
+	PasswordHash varchar(200),
+	Salt varchar(200)
+)	
+
+CREATE TABLE Roles
+(
+	Id varchar(50) PRIMARY KEY,
+	CreatedAt DATETIME2,
+	UpdatedAt DATETIME2,
+	Name VARCHAR(50),
+	Description VARCHAR(400),
+	ApplicationId VARCHAR(50) FOREIGN KEY REFERENCES Applications(Id)
+)
+
+CREATE TABLE CompanyUsers
+(
+	CompanyId varchar(50) FOREIGN KEY REFERENCES Companies(Id),
+	UserId varchar(50) FOREIGN KEY REFERENCES Users(Id)
+)
+
+CREATE TABLE ApplicationCustomers
+(
+	ApplicationId varchar(50) FOREIGN KEY REFERENCES Applications(Id),
+	CustomerId varchar(50) FOREIGN KEY REFERENCES Customers(Id),
+	RoleId varchar(50) FOREIGN KEY REFERENCES Roles(Id)
+)
