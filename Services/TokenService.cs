@@ -1,4 +1,5 @@
 ﻿using AuthService.Dtos;
+using AuthService.Exceptions;
 using AuthService.Maps;
 using AuthService.Models;
 using AuthService.Repos;
@@ -48,6 +49,16 @@ namespace AuthService.Services
 
         public async Task<UserResponseDto> GetUserFromTokenId(string tokenId)
         {
+            Token currentToken = await tokenRepo.GetToken(tokenId);
+
+            if (currentToken == null)
+                return null;
+
+            if (currentToken.ValidUntil < DateTime.Now)
+            {
+                throw new TokenExpiredException("Token has expired");
+            }
+
             User user = await tokenRepo.GetUserFromTokenId(tokenId);
 
             if (user == null)
@@ -61,6 +72,17 @@ namespace AuthService.Services
         public async Task<TokenResponseDto> RefreshToken(string tokenId)
         {
             DateTime newValidUntil = DateTime.Now.AddHours(1);
+
+            Token currentToken = await tokenRepo.GetToken(tokenId);
+
+            if (currentToken == null)
+                return null;
+
+            if (currentToken.ValidUntil < DateTime.Now)
+            {
+                throw new TokenExpiredException("Token has already expired");
+            }
+                
 
             Token token = await tokenRepo.RefreshToken(tokenId, newValidUntil);
 

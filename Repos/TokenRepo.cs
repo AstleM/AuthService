@@ -26,13 +26,25 @@ namespace AuthService.Repos
             return newToken;
         }
 
+        public async Task<Token> GetToken(string tokenId)
+        {
+            Token token;
+
+            using(IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
+            {
+                token = await db.QueryFirstOrDefaultAsync<Token>("SELECT * FROM Tokens WHERE Id = @Id", new { Id = tokenId });
+            }
+
+            return token;
+        }
+
         public async Task<User> GetUserFromTokenId(string tokenId)
         {
             User user;
 
             using (IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
             {
-                user = await db.QuerySingleOrDefaultAsync<User>("SELECT U.* FROM Users U INNER JOIN Tokens T On T.UserId = U.Id WHERE T.Id = @TokenId AND T.ValidUntil >= @Now", new {TokenId = tokenId, Now = DateTime.Now});
+                user = await db.QuerySingleOrDefaultAsync<User>("SELECT U.* FROM Users U INNER JOIN Tokens T On T.UserId = U.Id WHERE T.Id = @TokenId", new {TokenId = tokenId});
             }
 
             return user;
