@@ -110,5 +110,35 @@ namespace AuthService.Controllers
             }
             
         }
+
+        [HttpPost("/SendEmailConfirmation")]
+        public async Task<ActionResult> SendEmailConfirmation(string tokenId)
+        {
+            try
+            {
+                await usersService.SendEmailConfirmation(tokenId);
+                return NoContent();
+            } 
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during {method}", "SendEmailConfirmation");
+
+                return BadRequest("Something went wrong");
+            }
+        }
+
+        [HttpPost("/ConfirmEmail")]
+        public async Task<ActionResult> ConfirmEmail(string emailTokenId)
+        {
+            try
+            {
+                await usersService.ConfirmEmail(emailTokenId);
+                return NoContent();
+            } catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during {method}", "ConfirmEmail");
+                return BadRequest("Something went wrong");
+            }
+        }
     }
 }

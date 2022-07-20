@@ -1,4 +1,5 @@
 ﻿using AuthService.Dtos;
+using AuthService.Enums;
 using AuthService.Exceptions;
 using AuthService.Maps;
 using AuthService.Models;
@@ -37,7 +38,9 @@ namespace AuthService.Services
                 Id = id,
                 UserId = user.Id,
                 CreatedAt = DateTime.Now,
-                ValidUntil = DateTime.Now.AddHours(1)
+                ValidUntil = DateTime.Now.AddHours(1),
+                TokenType = TokenType.AuthenticationToken,
+                HasBeenInvalidated = false
             };
 
             Token newToken = await tokenRepo.CreateToken(token);
@@ -51,7 +54,7 @@ namespace AuthService.Services
         {
             Token currentToken = await tokenRepo.GetToken(tokenId);
 
-            if (currentToken == null)
+            if (currentToken == null || currentToken.HasBeenInvalidated)
                 return null;
 
             if (currentToken.ValidUntil < DateTime.Now)
@@ -75,7 +78,7 @@ namespace AuthService.Services
 
             Token currentToken = await tokenRepo.GetToken(tokenId);
 
-            if (currentToken == null)
+            if (currentToken == null || currentToken.HasBeenInvalidated)
                 return null;
 
             if (currentToken.ValidUntil < DateTime.Now)

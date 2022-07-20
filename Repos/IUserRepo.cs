@@ -6,5 +6,6 @@ namespace AuthService.Repos
     {
         public Task<User> SaveUser(User user);
         public Task<User> GetUserFromEmail(string email);
+        public Task<User> SetUserEmailConfirmed(string userId);
     }
 }

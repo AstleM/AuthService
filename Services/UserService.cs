@@ -1,4 +1,5 @@
 ﻿using AuthService.Dtos;
+using AuthService.Enums;
 using AuthService.Exceptions;
 using AuthService.Maps;
 using AuthService.Models;
@@ -14,14 +15,16 @@ namespace AuthService.Services
         private readonly IIdService idService;
         private readonly IUserRepo userRepo;
         private readonly IUserMap userMap;
+        private readonly ITokenRepo tokenRepo;
 
-        public UserService(IPasswordService passwordService, IConfiguration configuration, IIdService idService, IUserRepo userRepo, IUserMap userMap)
+        public UserService(IPasswordService passwordService, IConfiguration configuration, IIdService idService, IUserRepo userRepo, IUserMap userMap, ITokenRepo tokenRepo)
         {
             this.passwordService = passwordService;
             this.configuration = configuration;
             this.idService = idService;
             this.userRepo = userRepo;
             this.userMap = userMap;
+            this.tokenRepo = tokenRepo;
         }
 
         private static int saltLength = 50;
@@ -65,7 +68,8 @@ namespace AuthService.Services
                 PasswordHash = passwordHash,
                 Salt = salt,
                 CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                UpdatedAt = DateTime.Now,
+                EmailConfirmed = false
             };
 
             User newUser = await userRepo.SaveUser(user);
@@ -86,6 +90,57 @@ namespace AuthService.Services
             if(!passwordsMatch) return null;
 
             return user;
+        }
+
+        public async Task SendEmailConfirmation(string tokenId)
+        {
+            Token token = await tokenRepo.GetToken(tokenId);
+
+            if (token == null || token.HasBeenInvalidated)
+                throw new ArgumentException("Token invalid");
+
+            if (token.ValidUntil < DateTime.Now)
+                throw new ArgumentException("Token is expired");
+
+            User user;
+
+            user = await tokenRepo.GetUserFromTokenId(tokenId);
+
+            if (user == null)
+                throw new ArgumentException("User not found");
+
+            Token emailToken = new Token
+            {
+                Id = idService.GenerateId(),
+                UserId = user.Id,
+                CreatedAt = DateTime.Now,
+                ValidUntil = DateTime.Now.AddHours(1),
+                TokenType = TokenType.EmailConfirmationToken,
+                HasBeenInvalidated = false
+            };
+
+            await tokenRepo.CreateToken(emailToken);
+        }
+
+        public async Task ConfirmEmail(string emailTokenId)
+        {
+            Token token = await tokenRepo.GetToken(emailTokenId);
+
+            if (token == null || token.HasBeenInvalidated)
+                throw new ArgumentException("Token invalid");
+
+            if (token.ValidUntil < DateTime.Now)
+                throw new ArgumentException("Token is expired");
+
+            User user;
+
+            user = await tokenRepo.GetUserFromTokenId(emailTokenId);
+
+            if (user == null)
+                throw new ArgumentException("User not found");
+
+            await userRepo.SetUserEmailConfirmed(user.Id);
+            await tokenRepo.SetTokenInvalid(emailTokenId);
         }
     }
 }

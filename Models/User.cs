@@ -13,5 +13,6 @@
         public byte[] Salt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool EmailConfirmed { get; set; } = false;
     }
 }

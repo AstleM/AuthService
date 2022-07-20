@@ -32,10 +32,22 @@ namespace AuthService.Repos
 
             using (IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
             {
-                newUser = await db.QuerySingleAsync<User>("INSERT INTO Users(Id, CreatedAt, UpdatedAt, Email, PasswordHash, Salt) OUTPUT INSERTED.* VALUES (@Id, @CreatedAt, @UpdatedAt, @Email, @PasswordHash, @Salt)", user);
+                newUser = await db.QuerySingleAsync<User>("INSERT INTO Users(Id, CreatedAt, UpdatedAt, Email, PasswordHash, Salt, EmailConfirmed) OUTPUT INSERTED.* VALUES (@Id, @CreatedAt, @UpdatedAt, @Email, @PasswordHash, @Salt, @EmailConfirmed)", user);
             }
 
             return newUser;
+        }
+
+        public async Task<User> SetUserEmailConfirmed(string userId)
+        {
+            User user;
+
+            using(IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
+            {
+                user = await db.QueryFirstOrDefaultAsync<User>("UPDATE USERS SET EmailConfirmed = 1 OUTPUT INSERTED.* WHERE Id = @Id", new { Id = userId });
+            }
+
+            return user;
         }
     }
 }

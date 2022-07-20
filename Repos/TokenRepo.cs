@@ -20,7 +20,7 @@ namespace AuthService.Repos
 
             using (IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
             {
-                newToken = await db.QuerySingleAsync<Token>("INSERT INTO Tokens(Id, CreatedAt, UserId, ValidUntil) OUTPUT INSERTED.* VALUES (@Id, @CreatedAt, @UserId, @ValidUntil)", token);
+                newToken = await db.QuerySingleAsync<Token>("INSERT INTO Tokens(Id, CreatedAt, UserId, ValidUntil, TokenTypeId, HasBeenInvalidated) OUTPUT INSERTED.Id, INSERTED.CreatedAt, INSERTED.UserId, Inserted.ValidUntil, Inserted.TokenTypeId AS TokenType, INSERTED.HasBeenInvalidated VALUES (@Id, @CreatedAt, @UserId, @ValidUntil, @TokenType, @HasBeenInvalidated)", token);
             }
 
             return newToken;
@@ -57,6 +57,18 @@ namespace AuthService.Repos
             using (IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
             {
                 token = await db.QuerySingleOrDefaultAsync<Token>("UPDATE Tokens SET ValidUntil = @ValidUntil OUTPUT INSERTED.* WHERE Id = @Id AND ValidUntil >= @Now", new { ValidUntil = newValidUntil, Id = tokenId, Now = DateTime.Now });
+            }
+
+            return token;
+        }
+
+        public async Task<Token> SetTokenInvalid(string tokenId)
+        {
+            Token token;
+
+            using(IDbConnection db = new SqlConnection(configuration["DbConnectionString"]))
+            {
+                token = await db.QueryFirstOrDefaultAsync<Token>("UPDATE Tokens SET HasBeenInvalidated = 1 OUTPUT INSERTED.* WHERE Id = @Id", new { Id = tokenId });
             }
 
             return token;

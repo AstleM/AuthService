@@ -8,5 +8,7 @@ namespace AuthService.Services
         public Task<UserResponseDto> Create(UserCreateDto userToCreate);
 
         public Task<User> ValidateUser(TokenCreateDto loginDetails);
+        public Task SendEmailConfirmation(string tokenId);
+        public Task ConfirmEmail(string emailTokenId);
     }
 }
